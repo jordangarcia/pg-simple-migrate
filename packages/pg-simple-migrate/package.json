@@ -1,6 +1,6 @@
 {
   "name": "@pangaea-holdings/pg-simple-migrate",
-  "version": "0.1.0",
+  "version": "0.1.0-beta",
   "author": "Jordan Garcia @jordangarcia",
   "bin": {
     "pg-simple-migrate": "./bin/run"

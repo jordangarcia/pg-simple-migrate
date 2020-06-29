@@ -52,9 +52,7 @@ export default class Up extends BaseDbCommand {
     const { file } = flags
 
     if (file && /__rollback\.sql$/.test(file)) {
-      throw new Error(
-        `up file migration can't run rollbacks`
-      )
+      throw new Error(`up file migration can't run rollbacks`)
     }
 
     const migrations = await this.getMigrations(
@@ -86,15 +84,11 @@ export default class Up extends BaseDbCommand {
     dryRun: boolean
     verbose: boolean
   }) {
-    let lastMigrationId: number | null = null
+    let lastMigrationId: number = await this.getLastMigrationId()
+
     const toRun = migrations.filter((migration) => {
       return !previousMigrations.has(migration.name)
     })
-
-    if (toRun.length === 0) {
-      console.log(`✅ All caught up`)
-      return
-    }
 
     console.log(`Running migrations | batch=${batch} | release tag=${tag}\n`)
 
@@ -124,13 +118,16 @@ export default class Up extends BaseDbCommand {
     if (!dryRun) {
       if (tag) {
         await this.createRelease({
-          // gauranteed to be number since recordSuccess returns number
-          lastMigrationId: lastMigrationId as number,
+          lastMigrationId,
           tag,
         })
       }
 
       await this.db.query('COMMIT')
+    }
+
+    if (toRun.length === 0) {
+      console.log(`✅ All caught up`)
     }
   }
 
@@ -214,5 +211,15 @@ export default class Up extends BaseDbCommand {
       `INSERT INTO migration_releases (tag, last_migration_id) VALUES ($1, $2)`,
       [tag, lastMigrationId]
     )
+  }
+
+  private async getLastMigrationId(): Promise<number> {
+    const { rows } = await this.db.query<{ id: number }>(
+      `SELECT id FROM migrations ORDER BY id DESC LIMIT 1`
+    )
+    if (!rows.length) {
+      return 0
+    }
+    return rows[0].id
   }
 }
