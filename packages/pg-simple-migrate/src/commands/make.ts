@@ -1,10 +1,11 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import { Command, flags } from '@oclif/command'
 import cli from 'cli-ux'
-
 import { promisify } from 'util'
 import path from 'path'
 import fs from 'fs'
-import mkdirp from 'mkdirp'
 import { getNow } from '../utils'
 
 const writeFile = promisify(fs.writeFile)
@@ -42,14 +43,8 @@ export default class Make extends Command {
 
     const filename = `${getNow()}__${sanitizedName}`
 
-    const upFilename = `${filename}__up.sql`
-    const downFilename = `${filename}__down.sql`
-
-    const migrationsFolder = path.join(
-      process.cwd(),
-      flags['migrations-folder']
-    )
-    await mkdirp(migrationsFolder)
+    const upFilename = `${filename}.sql`
+    const downFilename = `${filename}__rollback.sql`
 
     const upPath = path.join(flags['migrations-folder'], upFilename)
     const downPath = path.join(flags['migrations-folder'], downFilename)

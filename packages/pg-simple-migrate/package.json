@@ -12,6 +12,7 @@
     "@oclif/plugin-help": "^3",
     "@types/mkdirp": "^1.0.1",
     "cli-ux": "^5.4.6",
+    "dotenv": "^8.2.0",
     "glob": "^7.1.6",
     "mkdirp": "^1.0.4",
     "pg": "^8.2.1",

@@ -1,3 +1,6 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import { promisify } from 'util'
 import cbGlob from 'glob'
 import path from 'path'
@@ -18,11 +21,6 @@ export default class Up extends BaseDbCommand {
 
   static flags = {
     ...BaseDbCommand.flags,
-    verbose: flags.boolean({
-      char: 'v',
-      default: false,
-      description: `Show SQL statements`,
-    }),
     'dry-run': flags.boolean({
       default: false,
       description: `Don't execute migration, pretend only`,
@@ -53,14 +51,14 @@ export default class Up extends BaseDbCommand {
 
     const { file } = flags
 
-    if (file && !/__up\.sql$/.test(file)) {
+    if (file && /__rollback\.sql$/.test(file)) {
       throw new Error(
-        'up file migration must reference a sql file ending in "__up.sql"'
+        `up file migration can't run rollbacks`
       )
     }
 
     const migrations = await this.getMigrations(
-      file ?? path.join(flags['migrations-folder'], './**/*__up.sql')
+      file ?? path.join(flags['migrations-folder'], './**/!(*__rollback).sql')
     )
 
     return await this.runMigrations({
@@ -105,7 +103,8 @@ export default class Up extends BaseDbCommand {
     }
     for (let migration of toRun) {
       const { name, sql } = migration
-      console.log(`️▶ ${name}`)
+      const filename = `${name}.sql`
+      console.log(`️▶ ${filename}`)
 
       if (verbose) {
         console.log(sql)
@@ -118,7 +117,7 @@ export default class Up extends BaseDbCommand {
       await this.executeMigration(sql)
 
       lastMigrationId = await this.recordSuccess({ batch, name })
-      console.log(`✅ ${name}`)
+      console.log(`✅ ${filename}`)
     }
 
     // at this point all migrations have been completed

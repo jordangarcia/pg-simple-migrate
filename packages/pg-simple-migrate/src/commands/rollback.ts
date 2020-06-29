@@ -1,3 +1,6 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import { promisify } from 'util'
 import cbGlob from 'glob'
 import path from 'path'
@@ -20,11 +23,6 @@ export default class Rollback extends BaseDbCommand {
 
   static flags = {
     ...BaseDbCommand.flags,
-    verbose: flags.boolean({
-      char: 'v',
-      default: false,
-      description: `Show SQL statements`,
-    }),
     'num-batches': flags.integer({
       default: 1,
     }),
@@ -118,7 +116,7 @@ export default class Rollback extends BaseDbCommand {
     migrationsPath: string,
     name: string
   ): Promise<Migration> {
-    const downName = name.replace('__up', '__down.sql')
+    const downName = `${name}__rollback.sql`
     const filepath = path.join(migrationsPath, `${downName}`)
     const file = await readFile(filepath, 'utf8')
 

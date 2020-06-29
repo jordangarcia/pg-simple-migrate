@@ -1,4 +1,9 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import BaseDbCommand from '../BaseDbCommand'
+import path from 'path'
+import mkdirp from 'mkdirp'
 
 const MIGRATIONS = 'migrations'
 const MIGRATION_RELEASES = 'migration_releases'
@@ -30,6 +35,8 @@ export default class Install extends BaseDbCommand {
   static args = [...BaseDbCommand.args]
 
   async run() {
+    const { args, flags } = this.parse(Install)
+
     if (
       (await this.db.checkTableExists(MIGRATIONS)) &&
       (await this.db.checkTableExists(MIGRATION_RELEASES))
@@ -39,6 +46,13 @@ export default class Install extends BaseDbCommand {
     }
 
     await this.db.query(CREATE_MIGRATIONS_TABLE)
-    console.log('✅ Installed migrations table')
+    console.log('✅ Created `migrations` and `migration_releases` tables')
+
+    const migrationsFolder = path.join(
+      process.cwd(),
+      flags['migrations-folder']
+    )
+    await mkdirp(migrationsFolder)
+    console.log(`✅ Created migrations folder: ${flags['migrations-folder']}`)
   }
 }

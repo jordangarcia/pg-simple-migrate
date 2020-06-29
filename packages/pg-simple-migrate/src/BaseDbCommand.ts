@@ -1,9 +1,6 @@
 import { Command, flags } from '@oclif/command'
-
-import { promisify } from 'util'
-import fs from 'fs'
 import { Db } from './db'
-import { Input, OutputArgs, OutputFlags } from '@oclif/parser'
+import { OutputFlags } from '@oclif/parser'
 
 export default abstract class BaseDbCommand extends Command {
   static args = []
@@ -17,6 +14,11 @@ export default abstract class BaseDbCommand extends Command {
       char: 'm',
       default: './db/migrations',
     }),
+    verbose: flags.boolean({
+      char: 'v',
+      default: false,
+      description: `Show debug information`,
+    }),
   }
 
   // @ts-ignore since we're initializing in the init function instead of constructor
@@ -29,6 +31,9 @@ export default abstract class BaseDbCommand extends Command {
     }: { flags: OutputFlags<typeof BaseDbCommand.flags> } = this.parse(
       this.constructor as any
     )
+    if (flags.verbose) {
+      console.log(`flags: ${JSON.stringify(flags, null, '  ')}`)
+    }
 
     if (!flags['db-url']) {
       throw new Error(
@@ -46,6 +51,11 @@ export default abstract class BaseDbCommand extends Command {
       console.error(`Unable to connect to DB:`)
       throw e
     }
+  }
+
+  async catch(err: Error) {
+    console.error(err.message)
+    this.exit(1)
   }
 
   async finally(err: Error) {
